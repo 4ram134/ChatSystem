@@ -1,26 +1,39 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { useNavigate } from 'react-router-dom'
 
 function Login() {
-  const [email, setEmail] = useState('')
+  const navigate = useNavigate()
+  const [name, setName] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
 
   async function handleLogin() {
     setError('')
 
-    if (email === '' || password === '') {
+    if (name === '' || password === '') {
       setError('Please fill in all fields')
       return
     }
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
+    const { data: user, error: findError } = await supabase
+      .from('users')
+      .select('email')
+      .eq('name', name)
+      .single()
+
+    if (findError || !user) {
+      setError('Incorrect Name or Password')
+      return
+    }
+
+    const { error: loginError } = await supabase.auth.signInWithPassword({
+      email: user.email,
       password,
     })
 
-    if (error) {
-      setError('Incorrect Email or Password')
+    if (loginError) {
+      setError('Incorrect Name or Password')
       return
     }
 
@@ -30,27 +43,40 @@ function Login() {
   return (
     <div className="Loginpage">
       <h1>Login</h1>
+
       <input
         className="NameInput"
-        type="email"
-        placeholder="you@example.com"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
+        type="text"
+        placeholder="Jeremy"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
       />
-      <input
-        className="PasswordInput"
-        type="password"
-        placeholder="••••••••"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
+
+       <input
+         className="PasswordInput"
+         type="password"
+         placeholder="••••••••"
+         value={password}
+         onChange={(e) => setPassword(e.target.value)}
+       />
+ 
       <button className="LoginButton" onClick={handleLogin} type="button">
         Login
       </button>
+
       {error && <p>{error}</p>}
-      <p>Don't have an account?</p>
+
+      <p>
+        Don't have an account? <button onClick={() => navigate('/Signup')}>Sign Up</button>
+      </p>
+
+       <p>or</p>
+
+      <p>
+        <button onClick = {() => navigate ('ForgotPassword')}>Forgot Password?</button> 
+      </p>
     </div>
   )
 }
 
-export default Login;
+export default Login

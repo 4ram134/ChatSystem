@@ -16,4 +16,6 @@ function Roles() {
          </div>
     </div>
   )
+}
 
+export default Roles
